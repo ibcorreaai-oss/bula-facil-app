@@ -63,6 +63,8 @@ export default function ResultScreen() {
     if (historyId) {
       setFromHistory(true);
       setScanId(historyId);
+      setExplanation(null);
+      setLoading(true);
       getScan(db, historyId).then((scan: StoredScan | null) => {
         if (!scan) {
           router.replace("/");
