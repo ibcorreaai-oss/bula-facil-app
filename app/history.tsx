@@ -46,7 +46,10 @@ export default function HistoryScreen() {
             style={styles.row}
             onPress={() => router.push({ pathname: "/result", params: { historyId: item.id } })}
           >
-            <Text style={styles.rowTitle}>{item.medicationName}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowTitle}>{item.medicationName}</Text>
+              {item.profileName !== "Eu" && <Text style={styles.rowProfile}>{item.profileName}</Text>}
+            </View>
             <Text style={styles.rowDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
             {item.explanation.seekCareSoon && <Text style={styles.rowFlag}>⚠️</Text>}
           </Pressable>
@@ -72,7 +75,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  rowTitle: { flex: 1, fontSize: 15, fontWeight: "700", color: colors.text },
+  rowTitle: { fontSize: 15, fontWeight: "700", color: colors.text },
+  rowProfile: { fontSize: 12, color: colors.primaryDark, fontWeight: "600" },
   rowDate: { fontSize: 12, color: colors.textMuted },
   rowFlag: { fontSize: 14 },
 });

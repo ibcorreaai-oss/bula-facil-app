@@ -7,6 +7,7 @@ import { EmotionalCheckIn, Feeling } from "@/components/EmotionalCheckIn";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ReminderControl } from "@/components/ReminderControl";
 import { explainPhoto, ExplainApiError } from "@/lib/api";
+import { getActiveProfile } from "@/lib/activeProfile";
 import { countScans, deleteOldestScansBeyond, getScan, saveScan, StoredScan } from "@/lib/db";
 import { detectLanguage } from "@/lib/language";
 import { takePendingPhoto } from "@/lib/pendingPhoto";
@@ -96,10 +97,11 @@ export default function ResultScreen() {
         savedRef.current = true;
         const id = generateId();
         setScanId(id);
+        const profileName = await getActiveProfile();
         await saveScan(db, {
           id,
           medicationName: result.medicationName,
-          profileName: "Eu",
+          profileName,
           photoUri: uri,
           explanation: result,
         });

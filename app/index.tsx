@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useSQLiteContext } from "expo-sqlite";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { countScans } from "@/lib/db";
+import { getActiveProfile } from "@/lib/activeProfile";
 import { setPendingPhoto } from "@/lib/pendingPhoto";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -12,10 +13,12 @@ export default function Home() {
   const router = useRouter();
   const db = useSQLiteContext();
   const [scanCount, setScanCount] = useState(0);
+  const [activeProfile, setActiveProfileState] = useState("Eu");
 
   useFocusEffect(
     useCallback(() => {
       countScans(db).then(setScanCount);
+      getActiveProfile().then(setActiveProfileState);
     }, [db])
   );
 
@@ -37,6 +40,9 @@ export default function Home() {
         <Text style={styles.badgeText}>💊 Grátis · Não é orientação médica</Text>
       </View>
       <Text style={styles.title}>Bula Fácil</Text>
+      <Pressable style={styles.profilePill} onPress={() => router.push("/profiles")}>
+        <Text style={styles.profilePillText}>👤 Escaneando para: {activeProfile}</Text>
+      </Pressable>
       <Text style={styles.subtitle}>
         Fotografe uma bula, caixa de remédio ou receita e entenda em poucos segundos, em linguagem
         simples.
@@ -80,6 +86,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   badgeText: { color: colors.primaryDark, fontSize: 12, fontWeight: "700" },
+  profilePill: { alignSelf: "center", marginTop: spacing.xs },
+  profilePillText: { color: colors.primaryDark, fontSize: 13, fontWeight: "700", textDecorationLine: "underline" },
   title: { fontSize: 34, fontWeight: "900", color: colors.text, textAlign: "center", marginTop: spacing.sm },
   subtitle: { fontSize: 15, color: colors.textMuted, textAlign: "center", lineHeight: 21, marginBottom: spacing.sm },
   cameraCard: {

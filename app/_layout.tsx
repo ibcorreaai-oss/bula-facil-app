@@ -36,6 +36,7 @@ export default function RootLayout() {
         <Stack.Screen name="camera" options={{ headerShown: false, presentation: "fullScreenModal" }} />
         <Stack.Screen name="result" options={{ title: "" }} />
         <Stack.Screen name="history" options={{ title: "Histórico" }} />
+        <Stack.Screen name="profiles" options={{ title: "Perfis da família" }} />
         <Stack.Screen name="paywall" options={{ title: "Bula Fácil Premium", presentation: "modal" }} />
         <Stack.Screen name="settings" options={{ title: "Ajustes e privacidade" }} />
       </Stack>
