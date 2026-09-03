@@ -1,25 +1,67 @@
 {
   "expo": {
-    "name": "bula-facil-tmp",
-    "slug": "bula-facil-tmp",
+    "name": "Bula Fácil",
+    "slug": "bula-facil",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "bulafacil",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cortextech.bulafacil",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Precisamos da câmera para fotografar a bula ou receita que você quer entender.",
+        "NSPhotoLibraryUsageDescription": "Você pode escolher uma foto já tirada da bula ou receita em vez de usar a câmera agora.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.cortextech.bulafacil",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F766E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["CAMERA", "READ_MEDIA_IMAGES", "POST_NOTIFICATIONS"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#0F766E"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Precisamos da câmera para fotografar a bula ou receita que você quer entender."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0F766E"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": ""
+      }
     }
   }
 }

@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# separate repo (bula-facil-api), tracked on its own
+/api-backend
