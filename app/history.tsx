@@ -37,6 +37,9 @@ export default function HistoryScreen() {
           </Text>
         </Pressable>
       )}
+      <Pressable style={styles.interactionsLink} onPress={() => router.push("/interactions")}>
+        <Text style={styles.interactionsLinkText}>💊 Checar interação entre remédios</Text>
+      </Pressable>
       <FlatList
         data={scans}
         keyExtractor={(item) => item.id}
@@ -65,6 +68,8 @@ const styles = StyleSheet.create({
   emptyText: { color: colors.textMuted, fontSize: 15 },
   limitBanner: { backgroundColor: "#FFFBEB", padding: spacing.sm, alignItems: "center" },
   limitText: { color: colors.warning, fontSize: 12, fontWeight: "600" },
+  interactionsLink: { backgroundColor: colors.border, padding: spacing.sm, alignItems: "center" },
+  interactionsLinkText: { color: colors.primaryDark, fontSize: 13, fontWeight: "700" },
   row: {
     flexDirection: "row",
     alignItems: "center",

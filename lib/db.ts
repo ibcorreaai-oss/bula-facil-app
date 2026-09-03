@@ -95,6 +95,17 @@ export async function clearReminder(db: SQLite.SQLiteDatabase, scanId: string) {
   );
 }
 
+export async function listMedicationNamesForProfile(
+  db: SQLite.SQLiteDatabase,
+  profileName: string
+): Promise<string[]> {
+  const rows = await db.getAllAsync<{ medication_name: string }>(
+    `SELECT DISTINCT medication_name FROM scans WHERE profile_name = ? ORDER BY created_at DESC`,
+    profileName
+  );
+  return rows.map((r) => r.medication_name);
+}
+
 export async function listProfileNames(db: SQLite.SQLiteDatabase): Promise<string[]> {
   const rows = await db.getAllAsync<{ profile_name: string }>(
     `SELECT DISTINCT profile_name FROM scans ORDER BY profile_name ASC`
