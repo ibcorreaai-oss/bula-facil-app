@@ -39,8 +39,42 @@ PRIVACIDADE EM PRIMEIRO LUGAR
 Sua foto é analisada só pra gerar a explicação e nunca fica guardada em nosso servidor. Seu
 histórico fica só no seu aparelho.
 
-Bula Fácil não é um dispositivo médico, não faz diagnóstico e não substitui a orientação de
-um médico ou farmacêutico licenciado.
+Bula Fácil não é um dispositivo médico e não diagnostica, trata, cura ou previne nenhuma
+condição médica. As explicações são geradas por inteligência artificial e não substituem a
+orientação de um médico ou farmacêutico licenciado.
+```
+
+## Full description (English)
+
+```
+Bula Fácil turns a photo of a medicine label, package, or prescription into a calm,
+plain-language explanation — without replacing your doctor's or pharmacist's guidance.
+
+HOW IT WORKS
+1. Point the camera at the label, package, or prescription
+2. AI explains what it's for, how to take it, and what to watch for
+3. Confirm you understood the most important points before moving on
+
+FREE FEATURES (forever)
+• Unlimited scans and explanations
+• Comprehension confirmation checklist
+• Read-aloud
+• Calm Mode: a guided breathing moment when the result makes you anxious
+• Never invents a medication name — if the photo isn't legible, it asks for a retake
+
+PREMIUM
+• Full history of explained medications
+• Separate profiles for each family member
+• Daily time reminders
+• Interaction check between medications the person has taken
+
+PRIVACY FIRST
+Your photo is only analyzed to generate the explanation and is never stored on our server.
+Your history stays only on your device.
+
+Bula Fácil is not a medical device and does not diagnose, treat, cure, or prevent any medical
+condition. Explanations are AI-generated and do not replace guidance from a licensed doctor or
+pharmacist.
 ```
 
 ## Keywords (Apple, 100 chars total, comma-separated no spaces)
@@ -48,8 +82,30 @@ um médico ou farmacêutico licenciado.
 bula,remedio,medicamento,receita,farmacia,saude,idoso,acessibilidade,dosagem,interacao
 ```
 
-## Google Play category
-Medical (or Health & Fitness if Medical requires extra declarations not yet completed)
+## Category — use Health & Fitness / Reference, NOT "Medical"
+Researched 03/09/2026: Apple's "Medical" category and Google's "Medical Device" labeling trigger
+much heavier review (regulatory approval documentation, proof of clinical validation) meant for
+apps that measure/diagnose. Bula Fácil only explains text/labels — it doesn't measure or
+diagnose anything — so it belongs in **Health & Fitness** (Apple/Samsung) or **Health &
+Fitness → Medical Reference** if Google's picker forces a subcategory. Do not select "Medical"
+even though it's tempting given the subject matter; it invites review criteria (device
+certification, clinical evidence) that don't apply and will slow or block approval.
+
+## Google Play: "Health apps declaration" form (mandatory since ~April 2026)
+Google Play Console requires this form for any app with health-adjacent functionality. Fill it
+out honestly: Bula Fácil provides general health *education* (explaining text that already
+exists on a label), not diagnosis, treatment, monitoring, or health data storage tied to an
+identity. When filling the form, also paste the exact required disclaimer into both the store
+description AND make sure it's visible in-app (already added: Settings screen + every
+explanation screen show "não é um dispositivo médico e não diagnostica, trata, cura ou previne
+nenhuma condição médica" / the English equivalent).
+
+## Apple: explicit AI data-sharing consent (Guideline 5.1.2(i))
+Sharing a user's photo with a third-party AI service (Groq) requires clear disclosure and an
+explicit permission step, not just a privacy-policy mention. Already implemented: a one-time
+consent modal appears before the first camera/gallery use (`components/ConsentModal.tsx`),
+naming Groq and stating the photo isn't stored. Confirm during Apple review notes that this
+consent flow exists, in case a reviewer asks.
 
 ## Content rating notes
 No user-generated content, no ads, no violence — should qualify for the lowest content rating

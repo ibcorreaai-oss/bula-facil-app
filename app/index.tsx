@@ -1,11 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useSQLiteContext } from "expo-sqlite";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { ConsentModal } from "@/components/ConsentModal";
 import { countScans } from "@/lib/db";
 import { getActiveProfile } from "@/lib/activeProfile";
+import { grantAiConsent, hasAiConsent } from "@/lib/consent";
 import { setPendingPhoto } from "@/lib/pendingPhoto";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -14,6 +16,8 @@ export default function Home() {
   const db = useSQLiteContext();
   const [scanCount, setScanCount] = useState(0);
   const [activeProfile, setActiveProfileState] = useState("Eu");
+  const [consentVisible, setConsentVisible] = useState(false);
+  const pendingActionRef = useRef<(() => void) | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -21,6 +25,27 @@ export default function Home() {
       getActiveProfile().then(setActiveProfileState);
     }, [db])
   );
+
+  async function withConsent(action: () => void) {
+    if (await hasAiConsent()) {
+      action();
+      return;
+    }
+    pendingActionRef.current = action;
+    setConsentVisible(true);
+  }
+
+  async function handleConsentAgree() {
+    await grantAiConsent();
+    setConsentVisible(false);
+    pendingActionRef.current?.();
+    pendingActionRef.current = null;
+  }
+
+  function handleConsentCancel() {
+    setConsentVisible(false);
+    pendingActionRef.current = null;
+  }
 
   async function pickFromGallery() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -48,13 +73,19 @@ export default function Home() {
         simples.
       </Text>
 
-      <Pressable style={styles.cameraCard} onPress={() => router.push("/camera")}>
+      <Pressable style={styles.cameraCard} onPress={() => withConsent(() => router.push("/camera"))}>
         <Text style={styles.cameraIcon}>📷</Text>
         <Text style={styles.cameraCardTitle}>Fotografar agora</Text>
         <Text style={styles.cameraCardSubtitle}>Aponte a câmera pra bula, caixa ou receita</Text>
       </Pressable>
 
-      <PrimaryButton label="Escolher foto da galeria" onPress={pickFromGallery} variant="secondary" />
+      <PrimaryButton
+        label="Escolher foto da galeria"
+        onPress={() => withConsent(pickFromGallery)}
+        variant="secondary"
+      />
+
+      <ConsentModal visible={consentVisible} onAgree={handleConsentAgree} onCancel={handleConsentCancel} />
 
       <View style={styles.row}>
         <Pressable style={styles.linkCard} onPress={() => router.push("/history")}>

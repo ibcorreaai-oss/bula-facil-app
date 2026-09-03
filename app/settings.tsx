@@ -20,8 +20,10 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Sobre</Text>
         <Text style={styles.bodyText}>
-          Bula Fácil não é um dispositivo médico e não substitui a orientação de um médico ou
-          farmacêutico. As explicações são um resumo educativo em linguagem simples.
+          Bula Fácil não é um dispositivo médico e não diagnostica, trata, cura ou previne
+          nenhuma condição médica. As explicações são geradas por inteligência artificial e são
+          um resumo educativo em linguagem simples — não substituem a orientação de um médico ou
+          farmacêutico.
         </Text>
         <Text style={styles.bodyText}>Versão {Constants.expoConfig?.version ?? "1.0.0"}</Text>
       </View>
