@@ -5,6 +5,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { ExplanationView } from "@/components/ExplanationView";
 import { EmotionalCheckIn, Feeling } from "@/components/EmotionalCheckIn";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { ReminderControl } from "@/components/ReminderControl";
 import { explainPhoto, ExplainApiError } from "@/lib/api";
 import { countScans, deleteOldestScansBeyond, getScan, saveScan, StoredScan } from "@/lib/db";
 import { detectLanguage } from "@/lib/language";
@@ -47,11 +48,20 @@ export default function ResultScreen() {
   const [retakePhoto, setRetakePhoto] = useState(false);
   const [explanation, setExplanation] = useState<MedicationExplanation | null>(null);
   const [fromHistory, setFromHistory] = useState(false);
+  const [scanId, setScanId] = useState<string | null>(null);
+  const [reminder, setReminderState] = useState<{ id: string | null; hour: number | null }>({ id: null, hour: null });
   const savedRef = useRef(false);
+
+  function refreshReminder(id: string) {
+    getScan(db, id).then((scan: StoredScan | null) => {
+      if (scan) setReminderState({ id: scan.reminderNotificationId, hour: scan.reminderHour });
+    });
+  }
 
   useEffect(() => {
     if (historyId) {
       setFromHistory(true);
+      setScanId(historyId);
       getScan(db, historyId).then((scan: StoredScan | null) => {
         if (!scan) {
           router.replace("/");
@@ -59,6 +69,7 @@ export default function ResultScreen() {
         }
         setPhotoUri(scan.photoUri);
         setExplanation(scan.explanation);
+        setReminderState({ id: scan.reminderNotificationId, hour: scan.reminderHour });
         setLoading(false);
       });
       return;
@@ -83,8 +94,10 @@ export default function ResultScreen() {
       setExplanation(result);
       if (!savedRef.current) {
         savedRef.current = true;
+        const id = generateId();
+        setScanId(id);
         await saveScan(db, {
-          id: generateId(),
+          id,
           medicationName: result.medicationName,
           profileName: "Eu",
           photoUri: uri,
@@ -139,11 +152,22 @@ export default function ResultScreen() {
       )}
 
       {explanation && !loading && (
-        <ExplanationView
-          explanation={explanation}
-          language={language}
-          showCheckin={feeling === "worried" || explanation.seekCareSoon}
-        />
+        <>
+          <ExplanationView
+            explanation={explanation}
+            language={language}
+            showCheckin={feeling === "worried" || explanation.seekCareSoon}
+          />
+          {scanId && (
+            <ReminderControl
+              scanId={scanId}
+              medicationName={explanation.medicationName}
+              reminderNotificationId={reminder.id}
+              reminderHour={reminder.hour}
+              onChanged={() => refreshReminder(scanId)}
+            />
+          )}
+        </>
       )}
     </ScrollView>
   );

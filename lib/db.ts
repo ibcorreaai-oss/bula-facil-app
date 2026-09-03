@@ -12,7 +12,10 @@ export async function initDb(db: SQLite.SQLiteDatabase) {
       medication_name TEXT NOT NULL,
       profile_name TEXT NOT NULL DEFAULT 'Eu',
       photo_uri TEXT,
-      explanation_json TEXT NOT NULL
+      explanation_json TEXT NOT NULL,
+      reminder_notification_id TEXT,
+      reminder_hour INTEGER,
+      reminder_minute INTEGER
     );
   `);
 }
@@ -24,6 +27,9 @@ export interface StoredScan {
   profileName: string;
   photoUri: string | null;
   explanation: MedicationExplanation;
+  reminderNotificationId: string | null;
+  reminderHour: number | null;
+  reminderMinute: number | null;
 }
 
 export async function saveScan(
@@ -66,6 +72,29 @@ export async function deleteOldestScansBeyond(db: SQLite.SQLiteDatabase, keep: n
   );
 }
 
+export async function setReminder(
+  db: SQLite.SQLiteDatabase,
+  scanId: string,
+  notificationId: string,
+  hour: number,
+  minute: number
+) {
+  await db.runAsync(
+    `UPDATE scans SET reminder_notification_id = ?, reminder_hour = ?, reminder_minute = ? WHERE id = ?`,
+    notificationId,
+    hour,
+    minute,
+    scanId
+  );
+}
+
+export async function clearReminder(db: SQLite.SQLiteDatabase, scanId: string) {
+  await db.runAsync(
+    `UPDATE scans SET reminder_notification_id = NULL, reminder_hour = NULL, reminder_minute = NULL WHERE id = ?`,
+    scanId
+  );
+}
+
 export async function listProfileNames(db: SQLite.SQLiteDatabase): Promise<string[]> {
   const rows = await db.getAllAsync<{ profile_name: string }>(
     `SELECT DISTINCT profile_name FROM scans ORDER BY profile_name ASC`
@@ -82,5 +111,8 @@ function rowToStoredScan(row: any): StoredScan {
     profileName: row.profile_name,
     photoUri: row.photo_uri,
     explanation: JSON.parse(row.explanation_json),
+    reminderNotificationId: row.reminder_notification_id ?? null,
+    reminderHour: row.reminder_hour ?? null,
+    reminderMinute: row.reminder_minute ?? null,
   };
 }
