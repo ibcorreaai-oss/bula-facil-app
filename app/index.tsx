@@ -9,7 +9,7 @@ import { countScans } from "@/lib/db";
 import { displayProfileName, getActiveProfile } from "@/lib/activeProfile";
 import { grantAiConsent, hasAiConsent } from "@/lib/consent";
 import { detectLanguage } from "@/lib/language";
-import { setPendingPhoto } from "@/lib/pendingPhoto";
+import { getLastSelectedDocumentType, setLastSelectedDocumentType, setPendingPhoto } from "@/lib/pendingPhoto";
 import { colors, radius, spacing } from "@/lib/theme";
 import { DocumentType, ExplainLanguage } from "@/lib/types";
 
@@ -113,7 +113,11 @@ export default function Home() {
   const [scanCount, setScanCount] = useState(0);
   const [activeProfile, setActiveProfileState] = useState("Eu");
   const [consentVisible, setConsentVisible] = useState(false);
-  const [documentType, setDocumentType] = useState<DocumentType>("medication");
+  const [documentType, setDocumentTypeState] = useState<DocumentType>(getLastSelectedDocumentType);
+  function setDocumentType(type: DocumentType) {
+    setDocumentTypeState(type);
+    setLastSelectedDocumentType(type);
+  }
   const pendingActionRef = useRef<(() => void) | null>(null);
 
   useFocusEffect(

@@ -1,7 +1,7 @@
 import * as SQLite from "expo-sqlite";
 import { DocumentType, LabExplanation, MedicationExplanation } from "./types";
 
-export const DB_NAME = "bulafacil.db";
+export const DB_NAME = "explicare.db";
 
 export async function initDb(db: SQLite.SQLiteDatabase) {
   await db.execAsync(`
@@ -19,6 +19,14 @@ export async function initDb(db: SQLite.SQLiteDatabase) {
       reminder_minute INTEGER
     );
   `);
+  // CREATE TABLE IF NOT EXISTS doesn't add columns to a table that already exists under an
+  // older schema (e.g. a dev build from before document_type existed) -- guard against that
+  // so a device with an existing "scans" table doesn't crash on the first query instead of
+  // just picking up the new column.
+  const columns = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(scans)`);
+  if (!columns.some((c) => c.name === "document_type")) {
+    await db.execAsync(`ALTER TABLE scans ADD COLUMN document_type TEXT NOT NULL DEFAULT 'medication';`);
+  }
 }
 
 export interface StoredScan {

@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ExplainLanguage } from "./types";
 
-const KEY = "bulafacil.activeProfile";
+const KEY = "explicare.activeProfile";
 export const DEFAULT_PROFILE = "Eu";
 
 const ME_LABEL: Record<ExplainLanguage, string> = {
