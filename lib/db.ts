@@ -1,5 +1,5 @@
 import * as SQLite from "expo-sqlite";
-import { MedicationExplanation } from "./types";
+import { DocumentType, LabExplanation, MedicationExplanation } from "./types";
 
 export const DB_NAME = "bulafacil.db";
 
@@ -9,6 +9,7 @@ export async function initDb(db: SQLite.SQLiteDatabase) {
     CREATE TABLE IF NOT EXISTS scans (
       id TEXT PRIMARY KEY NOT NULL,
       created_at INTEGER NOT NULL,
+      document_type TEXT NOT NULL DEFAULT 'medication',
       medication_name TEXT NOT NULL,
       profile_name TEXT NOT NULL DEFAULT 'Eu',
       photo_uri TEXT,
@@ -23,10 +24,12 @@ export async function initDb(db: SQLite.SQLiteDatabase) {
 export interface StoredScan {
   id: string;
   createdAt: number;
+  documentType: DocumentType;
+  /** Display title: medication name for "medication" scans, exam title for "lab" scans. */
   medicationName: string;
   profileName: string;
   photoUri: string | null;
-  explanation: MedicationExplanation;
+  explanation: MedicationExplanation | LabExplanation;
   reminderNotificationId: string | null;
   reminderHour: number | null;
   reminderMinute: number | null;
@@ -34,12 +37,20 @@ export interface StoredScan {
 
 export async function saveScan(
   db: SQLite.SQLiteDatabase,
-  entry: { id: string; medicationName: string; profileName: string; photoUri: string | null; explanation: MedicationExplanation }
+  entry: {
+    id: string;
+    documentType: DocumentType;
+    medicationName: string;
+    profileName: string;
+    photoUri: string | null;
+    explanation: MedicationExplanation | LabExplanation;
+  }
 ) {
   await db.runAsync(
-    `INSERT INTO scans (id, created_at, medication_name, profile_name, photo_uri, explanation_json) VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO scans (id, created_at, document_type, medication_name, profile_name, photo_uri, explanation_json) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     entry.id,
     Date.now(),
+    entry.documentType,
     entry.medicationName,
     entry.profileName,
     entry.photoUri,
@@ -99,8 +110,9 @@ export async function listMedicationNamesForProfile(
   db: SQLite.SQLiteDatabase,
   profileName: string
 ): Promise<string[]> {
+  // Interaction checking only makes sense between medications, not lab results.
   const rows = await db.getAllAsync<{ medication_name: string }>(
-    `SELECT DISTINCT medication_name FROM scans WHERE profile_name = ? ORDER BY created_at DESC`,
+    `SELECT DISTINCT medication_name FROM scans WHERE profile_name = ? AND document_type = 'medication' ORDER BY created_at DESC`,
     profileName
   );
   return rows.map((r) => r.medication_name);
@@ -118,6 +130,7 @@ function rowToStoredScan(row: any): StoredScan {
   return {
     id: row.id,
     createdAt: row.created_at,
+    documentType: row.document_type === "lab" ? "lab" : "medication",
     medicationName: row.medication_name,
     profileName: row.profile_name,
     photoUri: row.photo_uri,

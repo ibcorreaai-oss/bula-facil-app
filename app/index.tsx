@@ -11,16 +11,17 @@ import { grantAiConsent, hasAiConsent } from "@/lib/consent";
 import { detectLanguage } from "@/lib/language";
 import { setPendingPhoto } from "@/lib/pendingPhoto";
 import { colors, radius, spacing } from "@/lib/theme";
-import { ExplainLanguage } from "@/lib/types";
+import { DocumentType, ExplainLanguage } from "@/lib/types";
 
 const L: Record<
   ExplainLanguage,
   {
     badge: string;
     scanningFor: string;
-    subtitle: string;
-    cameraCardTitle: string;
-    cameraCardSubtitle: string;
+    typeMedication: string;
+    typeLab: string;
+    cameraCardTitle: Record<DocumentType, string>;
+    cameraCardSubtitle: Record<DocumentType, string>;
     gallery: string;
     history: string;
     settings: string;
@@ -30,9 +31,13 @@ const L: Record<
   pt: {
     badge: "💊🩺 Grátis · Não é orientação médica",
     scanningFor: "👤 Escaneando para:",
-    subtitle: "Fotografe uma bula, caixa de remédio, receita ou exame e entenda em poucos segundos, em linguagem simples.",
-    cameraCardTitle: "Fotografar agora",
-    cameraCardSubtitle: "Aponte a câmera pra bula, caixa, receita ou exame",
+    typeMedication: "💊 Remédio ou receita",
+    typeLab: "🧪 Exame de laboratório",
+    cameraCardTitle: { medication: "Fotografar agora", lab: "Fotografar exame" },
+    cameraCardSubtitle: {
+      medication: "Aponte a câmera pra bula, caixa ou receita",
+      lab: "Aponte a câmera pro resultado do seu exame",
+    },
     gallery: "Escolher foto da galeria",
     history: "Histórico",
     settings: "Ajustes",
@@ -41,9 +46,13 @@ const L: Record<
   en: {
     badge: "💊🩺 Free · Not medical advice",
     scanningFor: "👤 Scanning for:",
-    subtitle: "Photograph a medicine label, package insert, prescription, or lab result and understand it in seconds, in plain language.",
-    cameraCardTitle: "Take a photo now",
-    cameraCardSubtitle: "Point the camera at the label, box, prescription, or lab result",
+    typeMedication: "💊 Medicine or prescription",
+    typeLab: "🧪 Lab result",
+    cameraCardTitle: { medication: "Take a photo now", lab: "Photograph your result" },
+    cameraCardSubtitle: {
+      medication: "Point the camera at the label, box, or prescription",
+      lab: "Point the camera at your lab result",
+    },
     gallery: "Choose photo from gallery",
     history: "History",
     settings: "Settings",
@@ -52,9 +61,13 @@ const L: Record<
   es: {
     badge: "💊🩺 Gratis · No es orientación médica",
     scanningFor: "👤 Escaneando para:",
-    subtitle: "Fotografíe una etiqueta, prospecto, receta o resultado de laboratorio y entiéndalo en segundos, en lenguaje simple.",
-    cameraCardTitle: "Tomar foto ahora",
-    cameraCardSubtitle: "Apunte la cámara a la etiqueta, caja, receta o resultado",
+    typeMedication: "💊 Medicamento o receta",
+    typeLab: "🧪 Resultado de laboratorio",
+    cameraCardTitle: { medication: "Tomar foto ahora", lab: "Fotografiar resultado" },
+    cameraCardSubtitle: {
+      medication: "Apunte la cámara a la etiqueta, caja o receta",
+      lab: "Apunte la cámara a su resultado de laboratorio",
+    },
     gallery: "Elegir foto de la galería",
     history: "Historial",
     settings: "Ajustes",
@@ -63,9 +76,13 @@ const L: Record<
   fr: {
     badge: "💊🩺 Gratuit · Pas un avis médical",
     scanningFor: "👤 Analyse pour :",
-    subtitle: "Photographiez une étiquette, une notice, une ordonnance ou un résultat d'analyse et comprenez-le en quelques secondes, en langage simple.",
-    cameraCardTitle: "Prendre une photo",
-    cameraCardSubtitle: "Pointez la caméra vers l'étiquette, la boîte, l'ordonnance ou le résultat",
+    typeMedication: "💊 Médicament ou ordonnance",
+    typeLab: "🧪 Résultat d'analyse",
+    cameraCardTitle: { medication: "Prendre une photo", lab: "Photographier le résultat" },
+    cameraCardSubtitle: {
+      medication: "Pointez la caméra vers l'étiquette, la boîte ou l'ordonnance",
+      lab: "Pointez la caméra vers votre résultat d'analyse",
+    },
     gallery: "Choisir une photo dans la galerie",
     history: "Historique",
     settings: "Réglages",
@@ -74,9 +91,13 @@ const L: Record<
   zh: {
     badge: "💊🩺 免费 · 非医疗建议",
     scanningFor: "👤 正在为以下对象扫描：",
-    subtitle: "拍摄药品标签、说明书、处方或化验单，几秒钟内用简单的语言帮您理解。",
-    cameraCardTitle: "立即拍照",
-    cameraCardSubtitle: "将相机对准标签、包装盒、处方或化验单",
+    typeMedication: "💊 药品或处方",
+    typeLab: "🧪 化验单",
+    cameraCardTitle: { medication: "立即拍照", lab: "拍摄化验单" },
+    cameraCardSubtitle: {
+      medication: "将相机对准标签、包装盒或处方",
+      lab: "将相机对准您的化验单",
+    },
     gallery: "从相册选择照片",
     history: "历史记录",
     settings: "设置",
@@ -92,6 +113,7 @@ export default function Home() {
   const [scanCount, setScanCount] = useState(0);
   const [activeProfile, setActiveProfileState] = useState("Eu");
   const [consentVisible, setConsentVisible] = useState(false);
+  const [documentType, setDocumentType] = useState<DocumentType>("medication");
   const pendingActionRef = useRef<(() => void) | null>(null);
 
   useFocusEffect(
@@ -130,7 +152,7 @@ export default function Home() {
       quality: 0.9,
     });
     if (result.canceled || !result.assets[0]) return;
-    setPendingPhoto(result.assets[0].uri);
+    setPendingPhoto(result.assets[0].uri, documentType);
     router.push("/result");
   }
 
@@ -143,12 +165,31 @@ export default function Home() {
       <Pressable style={styles.profilePill} onPress={() => router.push("/profiles")}>
         <Text style={styles.profilePillText}>{t.scanningFor} {displayProfileName(activeProfile, language)}</Text>
       </Pressable>
-      <Text style={styles.subtitle}>{t.subtitle}</Text>
 
-      <Pressable style={styles.cameraCard} onPress={() => withConsent(() => router.push("/camera"))}>
+      <View style={styles.typeRow}>
+        <Pressable
+          style={[styles.typePill, documentType === "medication" && styles.typePillActive]}
+          onPress={() => setDocumentType("medication")}
+        >
+          <Text style={[styles.typePillText, documentType === "medication" && styles.typePillTextActive]}>
+            {t.typeMedication}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.typePill, documentType === "lab" && styles.typePillActive]}
+          onPress={() => setDocumentType("lab")}
+        >
+          <Text style={[styles.typePillText, documentType === "lab" && styles.typePillTextActive]}>{t.typeLab}</Text>
+        </Pressable>
+      </View>
+
+      <Pressable
+        style={styles.cameraCard}
+        onPress={() => withConsent(() => router.push({ pathname: "/camera", params: { documentType } }))}
+      >
         <Text style={styles.cameraIcon}>📷</Text>
-        <Text style={styles.cameraCardTitle}>{t.cameraCardTitle}</Text>
-        <Text style={styles.cameraCardSubtitle}>{t.cameraCardSubtitle}</Text>
+        <Text style={styles.cameraCardTitle}>{t.cameraCardTitle[documentType]}</Text>
+        <Text style={styles.cameraCardSubtitle}>{t.cameraCardSubtitle[documentType]}</Text>
       </Pressable>
 
       <PrimaryButton
@@ -195,7 +236,18 @@ const styles = StyleSheet.create({
   profilePill: { alignSelf: "center", marginTop: spacing.xs },
   profilePillText: { color: colors.primaryDark, fontSize: 13, fontWeight: "700", textDecorationLine: "underline" },
   title: { fontSize: 34, fontWeight: "900", color: colors.text, textAlign: "center", marginTop: spacing.sm },
-  subtitle: { fontSize: 15, color: colors.textMuted, textAlign: "center", lineHeight: 21, marginBottom: spacing.sm },
+  typeRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
+  typePill: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+  },
+  typePillActive: { borderColor: colors.primary, backgroundColor: colors.border },
+  typePillText: { fontSize: 13, fontWeight: "700", color: colors.textMuted },
+  typePillTextActive: { color: colors.primaryDark },
   cameraCard: {
     backgroundColor: colors.primary,
     borderRadius: radius.lg,

@@ -1,6 +1,6 @@
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { API_BASE_URL } from "./config";
-import { ExplainLanguage, MedicationExplanation } from "./types";
+import { ExplainLanguage, LabExplanation, MedicationExplanation } from "./types";
 
 export class ExplainApiError extends Error {
   retakePhoto: boolean;
@@ -24,15 +24,12 @@ async function prepareImageBase64(photoUri: string): Promise<{ base64: string; m
   return { base64: result.base64, mimeType: "image/jpeg" };
 }
 
-export async function explainPhoto(
-  photoUri: string,
-  language: ExplainLanguage
-): Promise<MedicationExplanation> {
+async function postPhoto<T>(endpoint: string, photoUri: string, language: ExplainLanguage): Promise<T> {
   const { base64, mimeType } = await prepareImageBase64(photoUri);
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE_URL}/api/explain`, {
+    res = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageBase64: base64, mimeType, language }),
@@ -45,7 +42,15 @@ export async function explainPhoto(
   if (!res.ok || !data) {
     throw new ExplainApiError(data?.error ?? GENERIC_ERROR_MESSAGE[language], Boolean(data?.retakePhoto));
   }
-  return data as MedicationExplanation;
+  return data as T;
+}
+
+export async function explainPhoto(photoUri: string, language: ExplainLanguage): Promise<MedicationExplanation> {
+  return postPhoto<MedicationExplanation>("/api/explain", photoUri, language);
+}
+
+export async function explainLabPhoto(photoUri: string, language: ExplainLanguage): Promise<LabExplanation> {
+  return postPhoto<LabExplanation>("/api/explain-lab", photoUri, language);
 }
 
 const NETWORK_ERROR_MESSAGE: Record<ExplainLanguage, string> = {

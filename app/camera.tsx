@@ -1,12 +1,12 @@
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { detectLanguage } from "@/lib/language";
 import { setPendingPhoto } from "@/lib/pendingPhoto";
 import { colors, radius, spacing } from "@/lib/theme";
-import { ExplainLanguage } from "@/lib/types";
+import { DocumentType, ExplainLanguage } from "@/lib/types";
 
 const L: Record<ExplainLanguage, { permission: string; allow: string; cancel: string; frameHint: string }> = {
   pt: {
@@ -43,6 +43,8 @@ const L: Record<ExplainLanguage, { permission: string; allow: string; cancel: st
 
 export default function CameraScreen() {
   const router = useRouter();
+  const { documentType: documentTypeParam } = useLocalSearchParams<{ documentType?: string }>();
+  const documentType: DocumentType = documentTypeParam === "lab" ? "lab" : "medication";
   const language = detectLanguage();
   const t = L[language];
   const [permission, requestPermission] = useCameraPermissions();
@@ -56,7 +58,7 @@ export default function CameraScreen() {
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 });
       if (photo?.uri) {
-        setPendingPhoto(photo.uri);
+        setPendingPhoto(photo.uri, documentType);
         router.replace("/result");
       }
     } finally {

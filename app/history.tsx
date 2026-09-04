@@ -79,6 +79,7 @@ export default function HistoryScreen() {
             style={styles.row}
             onPress={() => router.push({ pathname: "/result", params: { historyId: item.id } })}
           >
+            <Text style={styles.rowTypeIcon}>{item.documentType === "lab" ? "🧪" : "💊"}</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.rowTitle}>{item.medicationName}</Text>
               {item.profileName !== DEFAULT_PROFILE && <Text style={styles.rowProfile}>{item.profileName}</Text>}
@@ -100,6 +101,7 @@ const styles = StyleSheet.create({
   limitText: { color: colors.warning, fontSize: 12, fontWeight: "600" },
   interactionsLink: { backgroundColor: colors.border, padding: spacing.sm, alignItems: "center" },
   interactionsLinkText: { color: colors.primaryDark, fontSize: 13, fontWeight: "700" },
+  rowTypeIcon: { fontSize: 18 },
   row: {
     flexDirection: "row",
     alignItems: "center",

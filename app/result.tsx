@@ -3,17 +3,18 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from "re
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { ExplanationView } from "@/components/ExplanationView";
+import { LabResultView } from "@/components/LabResultView";
 import { EmotionalCheckIn, Feeling } from "@/components/EmotionalCheckIn";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ReminderControl } from "@/components/ReminderControl";
-import { explainPhoto, ExplainApiError } from "@/lib/api";
+import { explainLabPhoto, explainPhoto, ExplainApiError } from "@/lib/api";
 import { getActiveProfile } from "@/lib/activeProfile";
 import { countScans, deleteOldestScansBeyond, getScan, saveScan, StoredScan } from "@/lib/db";
 import { detectLanguage } from "@/lib/language";
 import { takePendingPhoto } from "@/lib/pendingPhoto";
 import { isPremium } from "@/lib/purchases";
 import { colors, radius, spacing } from "@/lib/theme";
-import { ExplainLanguage, MedicationExplanation } from "@/lib/types";
+import { DocumentType, ExplainLanguage, LabExplanation, MedicationExplanation } from "@/lib/types";
 import { FREE_HISTORY_LIMIT } from "@/lib/config";
 
 function generateId() {
@@ -61,6 +62,8 @@ const L: Record<
   },
 };
 
+type Explanation = MedicationExplanation | LabExplanation;
+
 export default function ResultScreen() {
   const router = useRouter();
   const db = useSQLiteContext();
@@ -69,11 +72,12 @@ export default function ResultScreen() {
   const t = L[language];
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [documentType, setDocumentType] = useState<DocumentType>("medication");
   const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retakePhoto, setRetakePhoto] = useState(false);
-  const [explanation, setExplanation] = useState<MedicationExplanation | null>(null);
+  const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [fromHistory, setFromHistory] = useState(false);
   const [scanId, setScanId] = useState<string | null>(null);
   const [reminder, setReminderState] = useState<{ id: string | null; hour: number | null }>({ id: null, hour: null });
@@ -97,6 +101,7 @@ export default function ResultScreen() {
           return;
         }
         setPhotoUri(scan.photoUri);
+        setDocumentType(scan.documentType);
         setExplanation(scan.explanation);
         setReminderState({ id: scan.reminderNotificationId, hour: scan.reminderHour });
         setLoading(false);
@@ -104,31 +109,34 @@ export default function ResultScreen() {
       return;
     }
 
-    const uri = takePendingPhoto();
-    if (!uri) {
+    const pending = takePendingPhoto();
+    if (!pending) {
       router.replace("/");
       return;
     }
-    setPhotoUri(uri);
-    runExplain(uri);
+    setPhotoUri(pending.uri);
+    setDocumentType(pending.documentType);
+    runExplain(pending.uri, pending.documentType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyId]);
 
-  async function runExplain(uri: string) {
+  async function runExplain(uri: string, type: DocumentType) {
     setLoading(true);
     setError(null);
     setRetakePhoto(false);
     try {
-      const result = await explainPhoto(uri, language);
+      const result = type === "lab" ? await explainLabPhoto(uri, language) : await explainPhoto(uri, language);
       setExplanation(result);
       if (!savedRef.current) {
         savedRef.current = true;
         const id = generateId();
         setScanId(id);
         const profileName = await getActiveProfile();
+        const title = type === "lab" ? (result as LabExplanation).examTitle : (result as MedicationExplanation).medicationName;
         await saveScan(db, {
           id,
-          medicationName: result.medicationName,
+          documentType: type,
+          medicationName: title,
           profileName,
           photoUri: uri,
           explanation: result,
@@ -175,23 +183,31 @@ export default function ResultScreen() {
           <Text style={styles.errorText}>{error}</Text>
           <PrimaryButton
             label={retakePhoto ? t.errorRetake : t.errorRetry}
-            onPress={() => (retakePhoto ? router.replace("/camera") : photoUri && runExplain(photoUri))}
+            onPress={() => (retakePhoto ? router.replace("/camera") : photoUri && runExplain(photoUri, documentType))}
           />
           <PrimaryButton label={t.back} onPress={() => router.replace("/")} variant="secondary" />
         </View>
       )}
 
-      {explanation && !loading && (
+      {explanation && !loading && documentType === "lab" && (
+        <LabResultView
+          explanation={explanation as LabExplanation}
+          language={language}
+          showCheckin={feeling === "worried" || explanation.seekCareSoon}
+        />
+      )}
+
+      {explanation && !loading && documentType === "medication" && (
         <>
           <ExplanationView
-            explanation={explanation}
+            explanation={explanation as MedicationExplanation}
             language={language}
             showCheckin={feeling === "worried" || explanation.seekCareSoon}
           />
           {scanId && (
             <ReminderControl
               scanId={scanId}
-              medicationName={explanation.medicationName}
+              medicationName={(explanation as MedicationExplanation).medicationName}
               reminderNotificationId={reminder.id}
               reminderHour={reminder.hour}
               onChanged={() => refreshReminder(scanId)}
