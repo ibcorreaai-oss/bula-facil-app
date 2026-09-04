@@ -38,20 +38,28 @@ export async function explainPhoto(
       body: JSON.stringify({ imageBase64: base64, mimeType, language }),
     });
   } catch {
-    throw new ExplainApiError(
-      language === "en"
-        ? "Couldn't reach the server. Check your connection and try again."
-        : "Não conseguimos falar com o servidor. Verifique sua conexão e tente de novo."
-    );
+    throw new ExplainApiError(NETWORK_ERROR_MESSAGE[language]);
   }
 
   const data = await res.json().catch(() => null);
   if (!res.ok || !data) {
-    throw new ExplainApiError(
-      data?.error ??
-        (language === "en" ? "Something went wrong. Please try again." : "Algo deu errado. Tente novamente."),
-      Boolean(data?.retakePhoto)
-    );
+    throw new ExplainApiError(data?.error ?? GENERIC_ERROR_MESSAGE[language], Boolean(data?.retakePhoto));
   }
   return data as MedicationExplanation;
 }
+
+const NETWORK_ERROR_MESSAGE: Record<ExplainLanguage, string> = {
+  pt: "Não conseguimos falar com o servidor. Verifique sua conexão e tente de novo.",
+  en: "Couldn't reach the server. Check your connection and try again.",
+  es: "No pudimos conectar con el servidor. Verifique su conexión e inténtelo de nuevo.",
+  fr: "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+  zh: "无法连接到服务器。请检查网络连接后重试。",
+};
+
+const GENERIC_ERROR_MESSAGE: Record<ExplainLanguage, string> = {
+  pt: "Algo deu errado. Tente novamente.",
+  en: "Something went wrong. Please try again.",
+  es: "Algo salió mal. Inténtelo de nuevo.",
+  fr: "Une erreur s'est produite. Veuillez réessayer.",
+  zh: "出了点问题。请再试一次。",
+};

@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "Bula Fácil",
-    "slug": "bula-facil",
+    "name": "Explicare",
+    "slug": "explicare",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "bulafacil",
+    "scheme": "explicare",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cortextech.bulafacil",
+      "bundleIdentifier": "com.cortextech.explicare",
       "infoPlist": {
-        "NSCameraUsageDescription": "Precisamos da câmera para fotografar a bula ou receita que você quer entender.",
-        "NSPhotoLibraryUsageDescription": "Você pode escolher uma foto já tirada da bula ou receita em vez de usar a câmera agora.",
+        "NSCameraUsageDescription": "We need the camera to photograph the medicine label, prescription, or lab result you want explained.",
+        "NSPhotoLibraryUsageDescription": "You can choose an existing photo of your medicine label, prescription, or lab result instead of using the camera now.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.cortextech.bulafacil",
+      "package": "com.cortextech.explicare",
       "adaptiveIcon": {
         "backgroundColor": "#0F766E",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -46,7 +46,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Precisamos da câmera para fotografar a bula ou receita que você quer entender."
+          "cameraPermission": "We need the camera to photograph the medicine label, prescription, or lab result you want explained."
         }
       ],
       [

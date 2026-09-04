@@ -6,14 +6,89 @@ import { useSQLiteContext } from "expo-sqlite";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ConsentModal } from "@/components/ConsentModal";
 import { countScans } from "@/lib/db";
-import { getActiveProfile } from "@/lib/activeProfile";
+import { displayProfileName, getActiveProfile } from "@/lib/activeProfile";
 import { grantAiConsent, hasAiConsent } from "@/lib/consent";
+import { detectLanguage } from "@/lib/language";
 import { setPendingPhoto } from "@/lib/pendingPhoto";
 import { colors, radius, spacing } from "@/lib/theme";
+import { ExplainLanguage } from "@/lib/types";
+
+const L: Record<
+  ExplainLanguage,
+  {
+    badge: string;
+    scanningFor: string;
+    subtitle: string;
+    cameraCardTitle: string;
+    cameraCardSubtitle: string;
+    gallery: string;
+    history: string;
+    settings: string;
+    premiumBanner: string;
+  }
+> = {
+  pt: {
+    badge: "💊🩺 Grátis · Não é orientação médica",
+    scanningFor: "👤 Escaneando para:",
+    subtitle: "Fotografe uma bula, caixa de remédio, receita ou exame e entenda em poucos segundos, em linguagem simples.",
+    cameraCardTitle: "Fotografar agora",
+    cameraCardSubtitle: "Aponte a câmera pra bula, caixa, receita ou exame",
+    gallery: "Escolher foto da galeria",
+    history: "Histórico",
+    settings: "Ajustes",
+    premiumBanner: "✨ Explicare Premium — histórico ilimitado, lembretes e perfis da família",
+  },
+  en: {
+    badge: "💊🩺 Free · Not medical advice",
+    scanningFor: "👤 Scanning for:",
+    subtitle: "Photograph a medicine label, package insert, prescription, or lab result and understand it in seconds, in plain language.",
+    cameraCardTitle: "Take a photo now",
+    cameraCardSubtitle: "Point the camera at the label, box, prescription, or lab result",
+    gallery: "Choose photo from gallery",
+    history: "History",
+    settings: "Settings",
+    premiumBanner: "✨ Explicare Premium — unlimited history, reminders, and family profiles",
+  },
+  es: {
+    badge: "💊🩺 Gratis · No es orientación médica",
+    scanningFor: "👤 Escaneando para:",
+    subtitle: "Fotografíe una etiqueta, prospecto, receta o resultado de laboratorio y entiéndalo en segundos, en lenguaje simple.",
+    cameraCardTitle: "Tomar foto ahora",
+    cameraCardSubtitle: "Apunte la cámara a la etiqueta, caja, receta o resultado",
+    gallery: "Elegir foto de la galería",
+    history: "Historial",
+    settings: "Ajustes",
+    premiumBanner: "✨ Explicare Premium — historial ilimitado, recordatorios y perfiles familiares",
+  },
+  fr: {
+    badge: "💊🩺 Gratuit · Pas un avis médical",
+    scanningFor: "👤 Analyse pour :",
+    subtitle: "Photographiez une étiquette, une notice, une ordonnance ou un résultat d'analyse et comprenez-le en quelques secondes, en langage simple.",
+    cameraCardTitle: "Prendre une photo",
+    cameraCardSubtitle: "Pointez la caméra vers l'étiquette, la boîte, l'ordonnance ou le résultat",
+    gallery: "Choisir une photo dans la galerie",
+    history: "Historique",
+    settings: "Réglages",
+    premiumBanner: "✨ Explicare Premium — historique illimité, rappels et profils familiaux",
+  },
+  zh: {
+    badge: "💊🩺 免费 · 非医疗建议",
+    scanningFor: "👤 正在为以下对象扫描：",
+    subtitle: "拍摄药品标签、说明书、处方或化验单，几秒钟内用简单的语言帮您理解。",
+    cameraCardTitle: "立即拍照",
+    cameraCardSubtitle: "将相机对准标签、包装盒、处方或化验单",
+    gallery: "从相册选择照片",
+    history: "历史记录",
+    settings: "设置",
+    premiumBanner: "✨ Explicare 高级版 — 无限历史记录、提醒和家庭档案",
+  },
+};
 
 export default function Home() {
   const router = useRouter();
   const db = useSQLiteContext();
+  const language = detectLanguage();
+  const t = L[language];
   const [scanCount, setScanCount] = useState(0);
   const [activeProfile, setActiveProfileState] = useState("Eu");
   const [consentVisible, setConsentVisible] = useState(false);
@@ -62,46 +137,46 @@ export default function Home() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.badge}>
-        <Text style={styles.badgeText}>💊 Grátis · Não é orientação médica</Text>
+        <Text style={styles.badgeText}>{t.badge}</Text>
       </View>
-      <Text style={styles.title}>Bula Fácil</Text>
+      <Text style={styles.title}>Explicare</Text>
       <Pressable style={styles.profilePill} onPress={() => router.push("/profiles")}>
-        <Text style={styles.profilePillText}>👤 Escaneando para: {activeProfile}</Text>
+        <Text style={styles.profilePillText}>{t.scanningFor} {displayProfileName(activeProfile, language)}</Text>
       </Pressable>
-      <Text style={styles.subtitle}>
-        Fotografe uma bula, caixa de remédio ou receita e entenda em poucos segundos, em linguagem
-        simples.
-      </Text>
+      <Text style={styles.subtitle}>{t.subtitle}</Text>
 
       <Pressable style={styles.cameraCard} onPress={() => withConsent(() => router.push("/camera"))}>
         <Text style={styles.cameraIcon}>📷</Text>
-        <Text style={styles.cameraCardTitle}>Fotografar agora</Text>
-        <Text style={styles.cameraCardSubtitle}>Aponte a câmera pra bula, caixa ou receita</Text>
+        <Text style={styles.cameraCardTitle}>{t.cameraCardTitle}</Text>
+        <Text style={styles.cameraCardSubtitle}>{t.cameraCardSubtitle}</Text>
       </Pressable>
 
       <PrimaryButton
-        label="Escolher foto da galeria"
+        label={t.gallery}
         onPress={() => withConsent(pickFromGallery)}
         variant="secondary"
       />
 
-      <ConsentModal visible={consentVisible} onAgree={handleConsentAgree} onCancel={handleConsentCancel} />
+      <ConsentModal
+        visible={consentVisible}
+        onAgree={handleConsentAgree}
+        onCancel={handleConsentCancel}
+        language={language}
+      />
 
       <View style={styles.row}>
         <Pressable style={styles.linkCard} onPress={() => router.push("/history")}>
           <Text style={styles.linkIcon}>🗂️</Text>
-          <Text style={styles.linkText}>Histórico{scanCount > 0 ? ` (${scanCount})` : ""}</Text>
+          <Text style={styles.linkText}>{t.history}{scanCount > 0 ? ` (${scanCount})` : ""}</Text>
         </Pressable>
         <Pressable style={styles.linkCard} onPress={() => router.push("/settings")}>
           <Text style={styles.linkIcon}>⚙️</Text>
-          <Text style={styles.linkText}>Ajustes</Text>
+          <Text style={styles.linkText}>{t.settings}</Text>
         </Pressable>
       </View>
 
       <Pressable style={styles.premiumBanner} onPress={() => router.push("/paywall")}>
-        <Text style={styles.premiumText}>
-          ✨ Bula Fácil Premium — histórico ilimitado, lembretes e perfis da família
-        </Text>
+        <Text style={styles.premiumText}>{t.premiumBanner}</Text>
       </Pressable>
     </ScrollView>
   );

@@ -3,11 +3,48 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { detectLanguage } from "@/lib/language";
 import { setPendingPhoto } from "@/lib/pendingPhoto";
 import { colors, radius, spacing } from "@/lib/theme";
+import { ExplainLanguage } from "@/lib/types";
+
+const L: Record<ExplainLanguage, { permission: string; allow: string; cancel: string; frameHint: string }> = {
+  pt: {
+    permission: "Precisamos da câmera pra fotografar a bula, receita ou exame.",
+    allow: "Permitir câmera",
+    cancel: "Cancelar",
+    frameHint: "Centralize o documento no quadro",
+  },
+  en: {
+    permission: "We need the camera to photograph the label, prescription, or lab result.",
+    allow: "Allow camera",
+    cancel: "Cancel",
+    frameHint: "Center the document in the frame",
+  },
+  es: {
+    permission: "Necesitamos la cámara para fotografiar la etiqueta, receta o resultado.",
+    allow: "Permitir cámara",
+    cancel: "Cancelar",
+    frameHint: "Centre el documento en el cuadro",
+  },
+  fr: {
+    permission: "Nous avons besoin de la caméra pour photographier l'étiquette, l'ordonnance ou le résultat.",
+    allow: "Autoriser la caméra",
+    cancel: "Annuler",
+    frameHint: "Centrez le document dans le cadre",
+  },
+  zh: {
+    permission: "我们需要使用相机拍摄标签、处方或化验单。",
+    allow: "允许使用相机",
+    cancel: "取消",
+    frameHint: "请将文件对准框内居中",
+  },
+};
 
 export default function CameraScreen() {
   const router = useRouter();
+  const language = detectLanguage();
+  const t = L[language];
   const [permission, requestPermission] = useCameraPermissions();
   const [ready, setReady] = useState(false);
   const [capturing, setCapturing] = useState(false);
@@ -34,11 +71,9 @@ export default function CameraScreen() {
   if (!permission.granted) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.permissionText}>
-          Precisamos da câmera pra fotografar a bula ou receita.
-        </Text>
-        <PrimaryButton label="Permitir câmera" onPress={requestPermission} />
-        <PrimaryButton label="Cancelar" onPress={() => router.back()} variant="secondary" />
+        <Text style={styles.permissionText}>{t.permission}</Text>
+        <PrimaryButton label={t.allow} onPress={requestPermission} />
+        <PrimaryButton label={t.cancel} onPress={() => router.back()} variant="secondary" />
       </View>
     );
   }
@@ -53,11 +88,11 @@ export default function CameraScreen() {
       />
       <View style={styles.overlay} pointerEvents="box-none">
         <View style={styles.frameHint}>
-          <Text style={styles.frameHintText}>Centralize a bula ou caixa do remédio</Text>
+          <Text style={styles.frameHintText}>{t.frameHint}</Text>
         </View>
         <View style={styles.controlsRow}>
           <Pressable onPress={() => router.back()} style={styles.cancelButton}>
-            <Text style={styles.cancelText}>Cancelar</Text>
+            <Text style={styles.cancelText}>{t.cancel}</Text>
           </Pressable>
           <Pressable onPress={capture} disabled={!ready || capturing} style={styles.shutterOuter}>
             <View style={[styles.shutterInner, capturing && { opacity: 0.5 }]} />

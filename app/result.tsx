@@ -20,18 +20,44 @@ function generateId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-const L: Record<ExplainLanguage, { loading: string; errorRetake: string; errorRetry: string; back: string }> = {
+const L: Record<
+  ExplainLanguage,
+  { loading: string; errorRetake: string; errorRetry: string; back: string; genericError: string }
+> = {
   pt: {
-    loading: "Lendo a bula com cuidado…",
+    loading: "Lendo com cuidado…",
     errorRetake: "Tirar outra foto",
     errorRetry: "Tentar de novo",
     back: "Voltar ao início",
+    genericError: "Algo deu errado. Tente novamente.",
   },
   en: {
-    loading: "Reading the label carefully…",
+    loading: "Reading carefully…",
     errorRetake: "Retake photo",
     errorRetry: "Try again",
     back: "Back home",
+    genericError: "Something went wrong. Please try again.",
+  },
+  es: {
+    loading: "Leyendo con cuidado…",
+    errorRetake: "Tomar otra foto",
+    errorRetry: "Intentar de nuevo",
+    back: "Volver al inicio",
+    genericError: "Algo salió mal. Inténtelo de nuevo.",
+  },
+  fr: {
+    loading: "Lecture en cours…",
+    errorRetake: "Reprendre la photo",
+    errorRetry: "Réessayer",
+    back: "Retour à l'accueil",
+    genericError: "Une erreur s'est produite. Veuillez réessayer.",
+  },
+  zh: {
+    loading: "正在仔细读取…",
+    errorRetake: "重新拍照",
+    errorRetry: "重试",
+    back: "返回首页",
+    genericError: "出了点问题。请再试一次。",
   },
 };
 
@@ -120,7 +146,7 @@ export default function ResultScreen() {
         setError(err.message);
         setRetakePhoto(err.retakePhoto);
       } else {
-        setError(language === "pt" ? "Algo deu errado. Tente novamente." : "Something went wrong. Please try again.");
+        setError(t.genericError);
       }
     } finally {
       setLoading(false);

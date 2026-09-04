@@ -4,10 +4,19 @@ import * as Haptics from "expo-haptics";
 import { colors, radius, spacing } from "@/lib/theme";
 import { ExplainLanguage } from "@/lib/types";
 
-const TITLE: Record<ExplainLanguage, string> = { pt: "Confirme que você entendeu", en: "Confirm you understood" };
+const TITLE: Record<ExplainLanguage, string> = {
+  pt: "Confirme que você entendeu",
+  en: "Confirm you understood",
+  es: "Confirme que entendió",
+  fr: "Confirmez que vous avez compris",
+  zh: "请确认您已理解",
+};
 const ALL_DONE: Record<ExplainLanguage, string> = {
   pt: "Você confirmou os pontos mais importantes. 👍",
   en: "You've confirmed the most important points. 👍",
+  es: "Confirmó los puntos más importantes. 👍",
+  fr: "Vous avez confirmé les points les plus importants. 👍",
+  zh: "您已确认最重要的要点。👍",
 };
 
 export function KeyPointsChecklist({ points, language }: { points: string[]; language: ExplainLanguage }) {

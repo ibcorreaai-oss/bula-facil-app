@@ -9,13 +9,74 @@ import { detectLanguage } from "@/lib/language";
 import { checkInteractions, InteractionCheckResult } from "@/lib/interactions";
 import { isPremium } from "@/lib/purchases";
 import { colors, radius, spacing } from "@/lib/theme";
+import { ExplainLanguage } from "@/lib/types";
 
 const SEVERITY_COLOR = { minor: colors.primary, moderate: colors.warning, serious: colors.danger };
+
+const L: Record<
+  ExplainLanguage,
+  {
+    empty: string;
+    subtitle: string;
+    verifying: string;
+    verify: string;
+    minSelection: string;
+    genericError: string;
+    demo: string;
+  }
+> = {
+  pt: {
+    empty: "Escaneie pelo menos 2 remédios diferentes pra essa pessoa antes de checar interações.",
+    subtitle: "Selecione os remédios que quer checar juntos:",
+    verifying: "Verificando…",
+    verify: "Verificar interações",
+    minSelection: "Selecione pelo menos 2 remédios.",
+    genericError: "Algo deu errado.",
+    demo: "Modo demonstração",
+  },
+  en: {
+    empty: "Scan at least 2 different medications for this person before checking interactions.",
+    subtitle: "Select the medications you want to check together:",
+    verifying: "Checking…",
+    verify: "Check interactions",
+    minSelection: "Select at least 2 medications.",
+    genericError: "Something went wrong.",
+    demo: "Demo mode",
+  },
+  es: {
+    empty: "Escanee al menos 2 medicamentos diferentes para esta persona antes de verificar interacciones.",
+    subtitle: "Seleccione los medicamentos que quiere verificar juntos:",
+    verifying: "Verificando…",
+    verify: "Verificar interacciones",
+    minSelection: "Seleccione al menos 2 medicamentos.",
+    genericError: "Algo salió mal.",
+    demo: "Modo demostración",
+  },
+  fr: {
+    empty: "Scannez au moins 2 médicaments différents pour cette personne avant de vérifier les interactions.",
+    subtitle: "Sélectionnez les médicaments à vérifier ensemble :",
+    verifying: "Vérification…",
+    verify: "Vérifier les interactions",
+    minSelection: "Sélectionnez au moins 2 médicaments.",
+    genericError: "Une erreur s'est produite.",
+    demo: "Mode démo",
+  },
+  zh: {
+    empty: "请先为该成员扫描至少 2 种不同的药物，再检查相互作用。",
+    subtitle: "选择您想一起检查的药物：",
+    verifying: "正在检查…",
+    verify: "检查相互作用",
+    minSelection: "请至少选择 2 种药物。",
+    genericError: "出了点问题。",
+    demo: "演示模式",
+  },
+};
 
 export default function InteractionsScreen() {
   const router = useRouter();
   const db = useSQLiteContext();
   const language = detectLanguage();
+  const t = L[language];
   const [names, setNames] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [premium, setPremium] = useState(false);
@@ -50,7 +111,7 @@ export default function InteractionsScreen() {
     }
     const chosen = Array.from(selected);
     if (chosen.length < 2) {
-      setError("Selecione pelo menos 2 remédios.");
+      setError(t.minSelection);
       return;
     }
     setLoading(true);
@@ -60,7 +121,7 @@ export default function InteractionsScreen() {
       const r = await checkInteractions(chosen, language);
       setResult(r);
     } catch (err: any) {
-      setError(err?.message ?? "Algo deu errado.");
+      setError(err?.message ?? t.genericError);
     } finally {
       setLoading(false);
     }
@@ -69,16 +130,14 @@ export default function InteractionsScreen() {
   if (names.length < 2) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyText}>
-          Escaneie pelo menos 2 remédios diferentes pra essa pessoa antes de checar interações.
-        </Text>
+        <Text style={styles.emptyText}>{t.empty}</Text>
       </View>
     );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.subtitle}>Selecione os remédios que quer checar juntos:</Text>
+      <Text style={styles.subtitle}>{t.subtitle}</Text>
       {names.map((name) => (
         <Pressable key={name} onPress={() => toggle(name)} style={styles.checkRow}>
           <View style={[styles.checkbox, selected.has(name) && styles.checkboxChecked]}>
@@ -88,12 +147,12 @@ export default function InteractionsScreen() {
         </Pressable>
       ))}
 
-      <PrimaryButton label={loading ? "Verificando…" : "Verificar interações"} onPress={run} loading={loading} />
+      <PrimaryButton label={loading ? t.verifying : t.verify} onPress={run} loading={loading} />
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       {result && (
         <View style={styles.resultCard}>
-          {result.isDemo && <Text style={styles.demoText}>Modo demonstração</Text>}
+          {result.isDemo && <Text style={styles.demoText}>{t.demo}</Text>}
           <Text style={styles.summary}>{result.summary}</Text>
           {result.pairs.map((pair, i) => (
             <View key={i} style={[styles.pairRow, { borderLeftColor: SEVERITY_COLOR[pair.severity] }]}>
